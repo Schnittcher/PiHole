@@ -1,0 +1,21 @@
+{
+    "translations": {
+        "de": {
+            "Update interval": "Aktualisierungsintervall",
+            "seconds": "Sekunden",
+            "Update data": "Daten aktualisieren",
+            "Blocking": "Blocking",
+            "Time to disable": "Zeit für die Deaktivierung",
+            "Remaining time": "Restzeit",
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "Blocking active": "Blocking aktiv",
+            "Blocking paused": "Blocking pausiert",
+            "Network protected": "Netzwerk geschützt",
+            "until resumed": "bis zur Fortsetzung",
+            "remaining": "übrig",
+            "Resume blocking": "Blocking fortsetzen",
+            "min": "Min",
+            "h": "Std"
+        }
+    }
+}

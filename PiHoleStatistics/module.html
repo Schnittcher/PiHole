@@ -1,0 +1,129 @@
+<style>
+.main{display:flex;align-items:center;gap:1.1em;flex:1;min-height:0;margin:.1em 0 .4em}
+.donut{position:relative;flex:none}
+.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut circle{fill:none;stroke-width:9}
+.donut .track{stroke:var(--c-border)}
+.donut .arc{stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+.donut .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut .pct{font-size:1.45em;font-weight:300;letter-spacing:-.02em;line-height:1}
+.donut .lbl{font-size:.8em;color:var(--text-sub);margin-top:.25em}
+.facts{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.5em}
+.fact .v{font-size:1.4em;font-weight:300;letter-spacing:-.01em;line-height:1.1}
+.fact .k{font-size:.85em;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spark{flex:none;height:4.2em;margin:.2em 0;position:relative}
+.spark svg{position:absolute;left:0;right:0;bottom:0;top:1.5em;width:100%;height:calc(100% - 1.5em)}
+.spark .ok{fill:color-mix(in srgb,var(--content-color,#fff) 22%,transparent)}
+.spark .bl{fill:var(--accent);opacity:.9}
+.spark .cap{position:absolute;left:0;top:0;font-size:.8em;color:var(--text-sub)}
+.tops{display:flex;gap:1.1em;flex:none;margin-top:.3em}
+.top{flex:1;min-width:0}
+.top h4{font-size:.8em;font-weight:500;color:var(--text-sub);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.35em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row{position:relative;display:flex;justify-content:space-between;gap:.5em;font-size:.92em;padding:.14em .4em;margin-bottom:.18em;border-radius:.35em;overflow:hidden}
+.row .fill{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--accent) 22%,transparent);z-index:0}
+.row span{position:relative;z-index:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row span.c{color:var(--text-sub);flex:none}
+.tile.no-spark .spark,.tile.no-tops .tops{display:none}
+.note{font-size:.85em;color:var(--warn);margin-bottom:.2em;flex:none}
+</style>
+<div class="tile" id="tile">
+  <div class="note" id="note" style="display:none"></div>
+  <div class="main" id="main">
+    <div class="donut" id="donut">
+      <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="40"/><circle class="arc" id="arc" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="251.33"/></svg>
+      <div class="mid"><div class="pct" id="pct"></div><div class="lbl" id="lblBlocked"></div></div>
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="v" id="total"></div><div class="k" id="kTotal"></div></div>
+      <div class="fact"><div class="v" id="blocked"></div><div class="k" id="kBlocked"></div></div>
+      <div class="fact"><div class="v" id="gravity"></div><div class="k" id="kGravity"></div></div>
+    </div>
+  </div>
+  <div class="spark" id="spark"><div class="cap" id="cap"></div><svg id="svg" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+  <div class="tops" id="tops">
+    <div class="top"><h4 id="hDomains"></h4><div id="domains"></div></div>
+    <div class="top"><h4 id="hClients"></h4><div id="clients"></div></div>
+  </div>
+</div>
+<script>
+var CIRC = 251.33, _hasSpark = false, _hasTops = false;
+
+function num(n) { return Number(n || 0).toLocaleString(); }
+function short(n) { n = Number(n || 0); return n >= 1e6 ? (n / 1e6).toFixed(1) + ' M' : n >= 1e4 ? Math.round(n / 1e3) + ' k' : num(n); }
+
+function area(points, base, max, key) {
+  var n = points.length;
+  if (n < 2) { return ''; }
+  var top = '', bottom = '';
+  for (var i = 0; i < n; i++) {
+    var x = (i / (n - 1)) * 100;
+    var yTop = 40 - (base ? (points[i][0] / max) * 38 : (points[i][1] / max) * 38) - 1;
+    top += (i ? 'L' : 'M') + x.toFixed(2) + ' ' + yTop.toFixed(2);
+    bottom = 'L' + x.toFixed(2) + ' 39' + bottom;
+  }
+  return '<path class="' + key + '" d="' + top + bottom + 'Z"/>';
+}
+
+function list(id, items) {
+  var el = document.getElementById(id), max = 1;
+  items.forEach(function (it) { max = Math.max(max, it.c); });
+  el.innerHTML = '';
+  items.forEach(function (it) {
+    var row = document.createElement('div'); row.className = 'row';
+    var fill = document.createElement('div'); fill.className = 'fill'; fill.style.width = (it.c / max * 100) + '%';
+    var a = document.createElement('span'); a.textContent = it.n;
+    var b = document.createElement('span'); b.className = 'c'; b.textContent = short(it.c);
+    row.appendChild(fill); row.appendChild(a); row.appendChild(b); el.appendChild(row);
+  });
+}
+
+// Donut so groß wie der Platz erlaubt, Verlauf und Top-Listen nur bei Daten und genug Höhe
+function layout() {
+  var tile = document.getElementById('tile'), main = document.getElementById('main'), donut = document.getElementById('donut');
+  var base = parseFloat(tile.style.fontSize) || 12, h = tile.clientHeight;
+  var size = Math.max(base * 5, Math.min(main.clientHeight, main.clientWidth * 0.46, base * 11));
+  donut.style.width = donut.style.height = size.toFixed(1) + 'px';
+  tile.classList.toggle('no-spark', !_hasSpark || h < base * 17);
+  tile.classList.toggle('no-tops', !_hasTops || h < base * 24);
+}
+
+function handleMessage(json) {
+  var d = JSON.parse(json), t = d.t;
+  document.getElementById('tile').classList.toggle('offline', !d.connected);
+  var note = document.getElementById('note');
+  note.textContent = t.offline || '';
+  note.style.display = d.connected ? 'none' : '';
+  document.getElementById('pct').textContent = Number(d.percent || 0).toFixed(1) + ' %';
+  document.getElementById('lblBlocked').textContent = t.blocked;
+  document.getElementById('arc').setAttribute('stroke-dashoffset', (CIRC * (1 - Math.min(100, d.percent || 0) / 100)).toFixed(2));
+  document.getElementById('total').textContent = short(d.total);
+  document.getElementById('kTotal').textContent = t.queries;
+  document.getElementById('blocked').textContent = short(d.blocked);
+  document.getElementById('kBlocked').textContent = t.blockedQueries;
+  document.getElementById('gravity').textContent = short(d.gravity);
+  document.getElementById('kGravity').textContent = t.onLists;
+  document.getElementById('cap').textContent = t.last24;
+  document.getElementById('hDomains').textContent = t.topBlocked;
+  document.getElementById('hClients').textContent = t.topClients;
+
+  var h = d.history || [], max = 0;
+  h.forEach(function (p) { max = Math.max(max, p[0]); });
+  _hasSpark = max > 0;
+  document.getElementById('svg').innerHTML = _hasSpark ? area(h, true, max, 'ok') + area(h, false, max, 'bl') : '';
+  list('domains', d.topDomains || []);
+  list('clients', d.topClients || []);
+  _hasTops = ((d.topDomains || []).length + (d.topClients || []).length) > 0;
+  layout();
+}
+
+(function () {
+  if (typeof ResizeObserver === 'undefined') { return; }
+  var t = document.getElementById('tile');
+  new ResizeObserver(function (e) {
+    var bs = e[0].borderBoxSize && e[0].borderBoxSize[0];
+    var w = bs ? bs.inlineSize : t.offsetWidth, h = bs ? bs.blockSize : t.offsetHeight;
+    t.style.fontSize = Math.max(9, Math.min(18, Math.min(w / 20, h / 22))).toFixed(2) + 'px';
+    layout();
+  }).observe(t);
+})();
+</script>

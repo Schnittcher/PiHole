@@ -1,0 +1,86 @@
+<style>
+.note{font-size:.85em;color:var(--warn);margin-bottom:.2em;flex:none}
+.gauges{flex:1;min-height:0;display:flex;align-items:center;justify-content:space-around;gap:.6em}
+.gauge{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:.35em}
+.ring{position:relative;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9}
+.ring .track{stroke:var(--c-border)}
+.ring .arc{stroke-linecap:round;transition:stroke-dashoffset .8s ease,stroke .3s}
+.ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.25em;font-weight:300;letter-spacing:-.02em}
+.gauge .k{font-size:.85em;color:var(--text-sub)}
+.info{flex:none;display:flex;flex-direction:column;gap:.35em;margin-top:.5em;font-size:.95em}
+.info .line{display:flex;justify-content:space-between;gap:.8em;min-width:0}
+.info .line span:first-child{color:var(--text-sub);flex:none}
+.info .line span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.badges{display:flex;gap:.5em;flex-wrap:wrap;margin-top:.1em}
+.badge{font-size:.85em;padding:.2em .7em;border-radius:1em;background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.tile.no-info .info{display:none}
+</style>
+<div class="tile" id="tile">
+  <div class="note" id="note" style="display:none"></div>
+  <div class="gauges" id="gauges">
+    <div class="gauge"><div class="ring" id="rCpu"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="40"/><circle class="arc" id="aCpu" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="251.33"/></svg><div class="val" id="vCpu"></div></div><div class="k" id="kCpu"></div></div>
+    <div class="gauge"><div class="ring" id="rRam"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="40"/><circle class="arc" id="aRam" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="251.33"/></svg><div class="val" id="vRam"></div></div><div class="k" id="kRam"></div></div>
+    <div class="gauge"><div class="ring" id="rTmp"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="40"/><circle class="arc" id="aTmp" cx="50" cy="50" r="40" stroke-dasharray="251.33" stroke-dashoffset="251.33"/></svg><div class="val" id="vTmp"></div></div><div class="k" id="kTmp"></div></div>
+  </div>
+  <div class="info" id="info">
+    <div class="line"><span id="kUp"></span><span id="up"></span></div>
+    <div class="line"><span id="kVer"></span><span id="ver"></span></div>
+    <div class="badges" id="badges"></div>
+  </div>
+</div>
+<script>
+var CIRC = 251.33;
+
+function gauge(prefix, pct, text, color) {
+  var arc = document.getElementById('a' + prefix);
+  arc.setAttribute('stroke-dashoffset', (CIRC * (1 - Math.max(0, Math.min(100, pct)) / 100)).toFixed(2));
+  arc.style.stroke = color;
+  document.getElementById('v' + prefix).textContent = text;
+}
+
+function layout() {
+  var tile = document.getElementById('tile'), area = document.getElementById('gauges');
+  var base = parseFloat(tile.style.fontSize) || 12;
+  var size = Math.max(base * 3.5, Math.min(area.clientHeight - base * 2, area.clientWidth / 3.3, base * 8));
+  ['rCpu', 'rRam', 'rTmp'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.style.width = el.style.height = size.toFixed(1) + 'px';
+  });
+  tile.classList.toggle('no-info', tile.clientHeight < base * 17);
+}
+
+function handleMessage(json) {
+  var d = JSON.parse(json), t = d.t;
+  document.getElementById('tile').classList.toggle('offline', !d.connected);
+  var note = document.getElementById('note');
+  note.textContent = t.offline || '';
+  note.style.display = d.connected ? 'none' : '';
+
+  gauge('Cpu', d.cpu, Math.round(d.cpu) + ' %', levelColor(d.cpu, 70, 90));
+  gauge('Ram', d.ram, Math.round(d.ram) + ' %', levelColor(d.ram, 80, 92));
+  var hasTemp = d.temp !== null && d.temp !== undefined;
+  gauge('Tmp', hasTemp ? d.temp / 90 * 100 : 0, hasTemp ? Math.round(d.temp) + '°' : '–', levelColor(d.temp || 0, 65, 80));
+  document.getElementById('kCpu').textContent = t.cpu;
+  document.getElementById('kRam').textContent = t.ram;
+  document.getElementById('kTmp').textContent = t.temp;
+
+  document.getElementById('kUp').textContent = t.uptime;
+  document.getElementById('up').textContent = duration(d.uptime);
+  document.getElementById('kVer').textContent = t.version;
+  var ver = [];
+  if (d.core) { ver.push('Core ' + d.core); }
+  if (d.web) { ver.push('Web ' + d.web); }
+  if (d.ftl) { ver.push('FTL ' + d.ftl); }
+  document.getElementById('ver').textContent = ver.join(' · ');
+
+  var badges = document.getElementById('badges');
+  badges.innerHTML = '';
+  if (d.update) { var u = document.createElement('span'); u.className = 'badge'; u.textContent = t.updateAvailable; badges.appendChild(u); }
+  if (d.messages > 0) { var m = document.createElement('span'); m.className = 'badge'; m.textContent = d.messages + ' ' + t.messages; badges.appendChild(m); }
+  layout();
+}
+
+scaleTile(document.getElementById('tile'), 20, 22, layout);
+</script>

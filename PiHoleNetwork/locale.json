@@ -1,0 +1,13 @@
+{
+    "translations": {
+        "de": {
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "Update interval": "Aktualisierungsintervall",
+            "seconds": "Sekunden",
+            "Update data": "Daten aktualisieren",
+            "Known devices": "Bekannte Geräte",
+            "DHCP leases": "DHCP-Leases",
+            "Gateway": "Gateway"
+        }
+    }
+}

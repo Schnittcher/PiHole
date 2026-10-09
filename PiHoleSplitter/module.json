@@ -1,0 +1,16 @@
+{
+    "id": "{7F1B108F-2DCE-496E-8BAE-8103685BF11E}",
+    "name": "PiHole Splitter",
+    "type": 2,
+    "vendor": "Pi-hole",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [
+        "{ECEFBF51-B247-47F0-98B6-F0F3E6EDCF1E}"
+    ],
+    "implemented": [
+        "{66FC3F0C-8A7A-4710-B485-4046F6C045AB}"
+    ],
+    "prefix": "PIHSPL",
+    "url": "https://github.com/Schnittcher/PiHole"
+}

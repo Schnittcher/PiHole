@@ -1,0 +1,22 @@
+{
+    "translations": {
+        "de": {
+            "Host": "Host",
+            "Port": "Port",
+            "Use HTTPS": "HTTPS verwenden",
+            "Verify certificate": "Zertifikat prüfen",
+            "Password or app password": "Passwort oder App-Passwort",
+            "Timeout": "Zeitüberschreitung",
+            "seconds": "Sekunden",
+            "Test connection": "Verbindung testen",
+            "Pi-hole splitter is active": "PiHole Splitter ist aktiv",
+            "No host configured": "Kein Host konfiguriert",
+            "Connected": "Verbunden",
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "Login failed, please check the password": "Anmeldung fehlgeschlagen, bitte Passwort prüfen",
+            "Connection successful, Pi-hole core %s": "Verbindung erfolgreich, Pi-hole Core %s",
+            "Unexpected answer (HTTP %d)": "Unerwartete Antwort (HTTP %d)",
+            "Pi-hole login failed": "Pi-hole Anmeldung fehlgeschlagen"
+        }
+    }
+}

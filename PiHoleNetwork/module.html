@@ -1,0 +1,36 @@
+<style>
+.note{font-size:.85em;color:var(--warn);margin-bottom:.2em;flex:none}
+.counts{flex:1;min-height:0;display:flex;align-items:center;justify-content:space-around;gap:1em}
+.count{flex:1;min-width:0;text-align:center}
+.count .v{font-size:2.6em;font-weight:200;letter-spacing:-.03em;line-height:1}
+.count .k{font-size:.9em;color:var(--text-sub);margin-top:.3em}
+.gw{flex:none;display:flex;justify-content:space-between;gap:.8em;align-items:center;margin-top:.6em;padding:.5em .8em;border-radius:.7em;background:var(--c-ui-bg);font-size:.95em}
+.gw span:first-child{color:var(--text-sub)}
+.gw span:last-child{font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile.tall .counts{flex-direction:column}
+</style>
+<div class="tile" id="tile">
+  <div class="note" id="note" style="display:none"></div>
+  <div class="counts">
+    <div class="count"><div class="v" id="devices"></div><div class="k" id="kDevices"></div></div>
+    <div class="count"><div class="v" id="leases"></div><div class="k" id="kLeases"></div></div>
+  </div>
+  <div class="gw" id="gw"><span id="kGw"></span><span id="gateway"></span></div>
+</div>
+<script>
+function handleMessage(json) {
+  var d = JSON.parse(json), t = d.t;
+  document.getElementById('tile').classList.toggle('offline', !d.connected);
+  var note = document.getElementById('note');
+  note.textContent = t.offline || '';
+  note.style.display = d.connected ? 'none' : '';
+  document.getElementById('devices').textContent = shortNum(d.devices);
+  document.getElementById('kDevices').textContent = t.devices;
+  document.getElementById('leases').textContent = shortNum(d.leases);
+  document.getElementById('kLeases').textContent = t.leases;
+  document.getElementById('kGw').textContent = t.gateway;
+  document.getElementById('gateway').textContent = d.gateway || '–';
+}
+var _tile = document.getElementById('tile');
+scaleTile(_tile, 18, 14, function (w, h) { _tile.classList.toggle('tall', h > w * 1.2); });
+</script>

@@ -1,0 +1,16 @@
+{
+    "id": "{7DB6D9B6-3EA3-4EBC-A4AA-0813503F3762}",
+    "name": "PiHole DNS",
+    "type": 3,
+    "vendor": "Pi-hole",
+    "aliases": [],
+    "parentRequirements": [
+        "{66FC3F0C-8A7A-4710-B485-4046F6C045AB}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{ECEFBF51-B247-47F0-98B6-F0F3E6EDCF1E}"
+    ],
+    "prefix": "PIHDNS",
+    "url": "https://github.com/Schnittcher/PiHole"
+}

@@ -1,0 +1,35 @@
+{
+    "translations": {
+        "de": {
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "CPU": "CPU",
+            "RAM": "RAM",
+            "Temperature": "Temperatur",
+            "Uptime": "Laufzeit",
+            "Version": "Version",
+            "messages": "Meldungen",
+            "Update interval": "Aktualisierungsintervall",
+            "Update interval for versions and database": "Aktualisierungsintervall für Versionen und Datenbank",
+            "seconds": "Sekunden",
+            "Update data": "Daten aktualisieren",
+            "System uptime": "Laufzeit des Systems",
+            "RAM used": "Arbeitsspeicher belegt",
+            "Swap used": "Swap belegt",
+            "Processes": "Prozesse",
+            "CPU usage": "CPU-Auslastung",
+            "FTL CPU usage": "CPU-Auslastung FTL",
+            "FTL memory usage": "Speicherauslastung FTL",
+            "CPU temperature": "CPU-Temperatur",
+            "FTL uptime": "Laufzeit FTL",
+            "Privacy level": "Datenschutzstufe",
+            "Diagnosis messages": "Diagnosemeldungen",
+            "Core version": "Core-Version",
+            "Web version": "Web-Version",
+            "FTL version": "FTL-Version",
+            "Database size": "Größe der Datenbank",
+            "Queries in database": "Abfragen in der Datenbank",
+            "Host model": "Hostmodell",
+            "Update available": "Update verfügbar"
+        }
+    }
+}

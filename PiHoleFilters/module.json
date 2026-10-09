@@ -1,0 +1,16 @@
+{
+    "id": "{4C0B86B0-D2A7-41B8-856C-A0F2C8A77CB6}",
+    "name": "PiHole Filters",
+    "type": 3,
+    "vendor": "Pi-hole",
+    "aliases": [],
+    "parentRequirements": [
+        "{66FC3F0C-8A7A-4710-B485-4046F6C045AB}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{ECEFBF51-B247-47F0-98B6-F0F3E6EDCF1E}"
+    ],
+    "prefix": "PIHFILTER",
+    "url": "https://github.com/Schnittcher/PiHole"
+}

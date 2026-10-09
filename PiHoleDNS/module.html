@@ -1,0 +1,99 @@
+<style>
+.center{flex:1;min-height:0;display:flex;flex-direction:row;align-items:center;gap:1em}
+.power{
+  position:relative;flex:none;border:0;border-radius:50%;background:var(--c-ui-bg);padding:0;
+  color:var(--ring,var(--ok));cursor:pointer;outline:none;display:flex;align-items:center;justify-content:center;
+  transition:transform .12s,background .2s;
+}
+.power:hover{background:var(--c-btn-bg)}
+.power:active{transform:scale(.96)}
+.power svg.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.power circle{fill:none;stroke-width:6;stroke-linecap:round}
+.power .track{stroke:var(--c-border)}
+.power .bar{stroke:var(--ring,var(--ok));transition:stroke-dashoffset .9s linear,stroke .3s}
+.power svg.icon{width:34%;height:34%;fill:none;stroke:currentColor;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.txt{flex:1;min-width:0;overflow-wrap:anywhere}
+.state{font-size:1.25em;font-weight:300;letter-spacing:-.01em;line-height:1.15}
+.tile.tall .center{flex-direction:column;justify-content:center;gap:.6em}
+.tile.tall .txt{flex:none;text-align:center}
+.quick{display:flex;gap:.5em;justify-content:center;flex:none;margin-top:.6em}
+.quick .btn{flex:1;max-width:6em;padding:.5em .2em;text-align:center;white-space:nowrap}
+.quick .wide{max-width:16em}
+</style>
+<div class="tile" id="tile">
+  <div class="center" id="center">
+    <button class="power" id="power" type="button">
+      <svg class="ring" viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="44"/><circle class="bar" id="bar" cx="50" cy="50" r="44" stroke-dasharray="276.46" stroke-dashoffset="0"/></svg>
+      <svg class="icon" viewBox="0 0 64 64"><path d="M32 8v22"/><path d="M18 16a22 22 0 1 0 28 0"/></svg>
+    </button>
+    <div class="txt"><div class="state" id="state"></div><div class="sub" id="info"></div></div>
+  </div>
+  <div class="quick" id="quick"></div>
+</div>
+<script>
+var _s = {}, _at = 0, _timer = null, CIRC = 276.46;
+
+function fmt(sec) {
+  var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+  var mm = (m < 10 && h > 0 ? '0' : '') + m, ss = (s < 10 ? '0' : '') + s;
+  return (h > 0 ? h + ':' : '') + mm + ':' + ss;
+}
+function label(sec) { return sec >= 3600 ? (sec / 3600) + ' ' + _s.t.hourShort : (sec / 60) + ' ' + _s.t.minShort; }
+function left() { return Math.max(0, (_s.remaining || 0) - Math.round((Date.now() - _at) / 1000)); }
+
+// Ring so groß wie der Platz erlaubt: nie höher als der Bereich, im Querformat höchstens 40 % der Breite
+function fit() {
+  var tile = document.getElementById('tile'), c = document.getElementById('center'), p = document.getElementById('power');
+  var base = parseFloat(tile.style.fontSize) || 12, tall = tile.classList.contains('tall');
+  var size = tall ? Math.min(c.clientHeight * 0.62, c.clientWidth * 0.6, base * 10) : Math.min(c.clientHeight, c.clientWidth * 0.4, base * 9);
+  size = Math.max(base * 4, size);
+  p.style.width = p.style.height = size.toFixed(1) + 'px';
+}
+
+function render() {
+  var t = _s.t, tile = document.getElementById('tile');
+  var paused = !_s.blocking, rem = paused ? left() : 0, timed = paused && (_s.remaining || 0) > 0;
+  tile.classList.toggle('offline', !_s.connected);
+  tile.style.setProperty('--ring', paused ? 'var(--warn)' : 'var(--ok)');
+  document.getElementById('state').textContent = paused ? t.paused : t.active;
+  document.getElementById('info').textContent = !_s.connected ? t.offline : (timed ? fmt(rem) + ' ' + t.remaining : (paused ? t.untilResumed : t.protected));
+  var frac = timed ? Math.min(1, rem / Math.max(_s.total || rem, 1)) : 1;
+  document.getElementById('bar').setAttribute('stroke-dashoffset', (CIRC * (1 - frac)).toFixed(2));
+
+  var q = document.getElementById('quick'), mode = paused ? 'p' : 'a';
+  if (q.getAttribute('data-mode') !== mode) {
+    q.setAttribute('data-mode', mode);
+    q.innerHTML = '';
+    if (paused) {
+      add(q, t.resume, 'btn wide sel', function () { requestAction('Resume', 0); });
+    } else {
+      [300, 1800, 3600, 0].forEach(function (sec) {
+        add(q, sec ? label(sec) : '∞', 'btn', function () { requestAction('Pause', sec); });
+      });
+    }
+    fit();
+  }
+  clearInterval(_timer);
+  if (timed) { _timer = setInterval(render, 1000); }
+}
+function add(parent, text, cls, fn) {
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = cls; b.textContent = text; b.onclick = fn; parent.appendChild(b);
+}
+document.getElementById('power').onclick = function () {
+  if (_s.blocking) { requestAction('Pause', _s.duration || 0); } else { requestAction('Resume', 0); }
+};
+function handleMessage(json) { _s = JSON.parse(json); _at = Date.now(); render(); fit(); }
+
+(function () {
+  if (typeof ResizeObserver === 'undefined') { return; }
+  var t = document.getElementById('tile');
+  new ResizeObserver(function (e) {
+    var bs = e[0].borderBoxSize && e[0].borderBoxSize[0];
+    var w = bs ? bs.inlineSize : t.offsetWidth, h = bs ? bs.blockSize : t.offsetHeight;
+    t.style.fontSize = Math.max(9, Math.min(18, Math.min(w / 18, h / 16))).toFixed(2) + 'px';
+    t.classList.toggle('tall', h > w * 1.15);
+    fit();
+  }).observe(t);
+})();
+</script>

@@ -1,0 +1,16 @@
+{
+    "id": "{D53E796A-59A7-4D0F-A477-784439AE6C26}",
+    "name": "PiHole Maintenance",
+    "type": 3,
+    "vendor": "Pi-hole",
+    "aliases": [],
+    "parentRequirements": [
+        "{66FC3F0C-8A7A-4710-B485-4046F6C045AB}"
+    ],
+    "childRequirements": [],
+    "implemented": [
+        "{ECEFBF51-B247-47F0-98B6-F0F3E6EDCF1E}"
+    ],
+    "prefix": "PIHMAINT",
+    "url": "https://github.com/Schnittcher/PiHole"
+}

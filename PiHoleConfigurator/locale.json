@@ -1,0 +1,16 @@
+{
+    "translations": {
+        "de": {
+            "Instances": "Instanzen",
+            "Name": "Name",
+            "Description": "Beschreibung",
+            "Statistics, top lists and history": "Statistik, Top-Listen und Verlauf",
+            "Switch DNS blocking on and off": "DNS-Blocking ein- und ausschalten",
+            "System state, versions and logs": "Systemzustand, Versionen und Logs",
+            "Gravity, DNS restart and backup": "Gravity, DNS-Neustart und Backup",
+            "Domains, groups, clients and lists": "Domains, Gruppen, Clients und Listen",
+            "Network devices and DHCP leases": "Netzwerkgeräte und DHCP-Leases",
+            "Read and change the configuration": "Konfiguration lesen und ändern"
+        }
+    }
+}

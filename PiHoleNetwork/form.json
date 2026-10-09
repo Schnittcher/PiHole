@@ -1,35 +1,18 @@
 {
     "elements": [
         {
-            "type": "Label",
-            "label": "Pi-hole Settings"
-        },
-        {
-            "type": "ValidationTextBox",
-            "name": "Host",
-            "caption": "IP Adresse des Pi-holes"
-        },
-        {
             "type": "NumberSpinner",
-            "name": "Port",
-            "caption": "Port des Pi-hole Webinterfaces"
-        },
-        {
-            "type": "ValidationTextBox",
-            "name": "PihToken",
-            "caption": "API Token des Pi-holes"
-        },
-        {
-            "type": "IntervalBox",
-            "name": "UpdateTimerInterval",
-            "caption": "Seconds"
+            "name": "UpdateInterval",
+            "caption": "Update interval",
+            "suffix": "seconds",
+            "minimum": 0
         }
     ],
     "actions": [
         {
             "type": "Button",
-            "label": "Update data",
-            "onClick": "Pih_updateStatus($id);"
+            "caption": "Update data",
+            "onClick": "PIHNET_Update($id);"
         },
         {
             "type": "Label",
@@ -58,5 +41,6 @@
                 }
             ]
         }
-    ]
+    ],
+    "status": []
 }

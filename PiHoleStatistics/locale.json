@@ -1,0 +1,31 @@
+{
+    "translations": {
+        "de": {
+            "Update interval": "Aktualisierungsintervall",
+            "seconds": "Sekunden",
+            "Create variables per query type": "Variablen je Abfragetyp anlegen",
+            "Create variables per query status": "Variablen je Abfragestatus anlegen",
+            "Create variables per reply type": "Variablen je Antworttyp anlegen",
+            "Update data": "Daten aktualisieren",
+            "DNS queries": "DNS-Abfragen",
+            "Queries blocked": "Geblockte Abfragen",
+            "Percent blocked": "Anteil geblockt",
+            "Unique domains": "Eindeutige Domains",
+            "Queries forwarded": "Weitergeleitete Abfragen",
+            "Queries cached": "Aus dem Cache beantwortet",
+            "Queries per second": "Abfragen pro Sekunde",
+            "Active clients": "Aktive Clients",
+            "Clients total": "Clients gesamt",
+            "Domains on blocklists": "Domains auf Blocklisten",
+            "Gravity last updated": "Gravity zuletzt aktualisiert",
+            "Query type": "Abfragetyp",
+            "Query status": "Abfragestatus",
+            "Reply type": "Antworttyp",
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "blocked": "geblockt",
+            "Last 24 hours": "Letzte 24 Stunden",
+            "Top blocked": "Top geblockt",
+            "Top clients": "Top Clients"
+        }
+    }
+}

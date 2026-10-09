@@ -2,8 +2,11 @@
     "id": "{D739A2A2-2D6A-44A1-A557-D55EDB8D76A9}",
     "author": "Kai Schnittcher",
     "name": "PiHole",
-    "url": "https://github.com/Schnittcher/IPS-PiHole",
-    "version": "1.7",
+    "url": "https://github.com/Schnittcher/PiHole",
+    "compatibility": {
+        "version": "8.1"
+    },
+    "version": "2.0",
     "build": 0,
     "date": 0
 }

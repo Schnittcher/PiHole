@@ -1,0 +1,20 @@
+{
+    "translations": {
+        "de": {
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "running": "läuft",
+            "Not run yet": "Noch nicht ausgeführt",
+            "Update gravity": "Gravity aktualisieren",
+            "Restart DNS": "DNS neu starten",
+            "Flush logs": "Logs leeren",
+            "Flush ARP cache": "ARP-Cache leeren",
+            "Flush network table": "Netzwerktabelle leeren",
+            "Update the gravity blocklists now? This may take a few minutes.": "Gravity-Blocklisten jetzt aktualisieren? Das kann einige Minuten dauern.",
+            "Restart the DNS server of the Pi-hole now?": "DNS-Server des Pi-holes jetzt neu starten?",
+            "Action": "Aktion",
+            "Last result": "Letztes Ergebnis",
+            "Last run": "Letzte Ausführung",
+            "done": "erledigt"
+        }
+    }
+}

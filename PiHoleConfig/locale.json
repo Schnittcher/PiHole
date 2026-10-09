@@ -1,0 +1,7 @@
+{
+    "translations": {
+        "de": {
+            "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions.": "Diese Instanz hat keine Einstellungen. Die Pi-hole Konfiguration wird mit den PIHCONF-Funktionen gelesen und geändert."
+        }
+    }
+}

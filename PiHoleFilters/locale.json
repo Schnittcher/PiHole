@@ -1,0 +1,19 @@
+{
+    "translations": {
+        "de": {
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "Allowed domains": "Erlaubte Domains",
+            "Denied domains": "Gesperrte Domains",
+            "Update interval": "Aktualisierungsintervall",
+            "seconds": "Sekunden",
+            "Update data": "Daten aktualisieren",
+            "Blocklists": "Blocklisten",
+            "Groups": "Gruppen",
+            "Clients": "Clients",
+            "Allowed domains (exact)": "Erlaubte Domains (exakt)",
+            "Denied domains (exact)": "Gesperrte Domains (exakt)",
+            "Allowed domains (regex)": "Erlaubte Domains (Regex)",
+            "Denied domains (regex)": "Gesperrte Domains (Regex)"
+        }
+    }
+}
