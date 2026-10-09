@@ -9,6 +9,7 @@ Diese Bibliothek bindet einen Pi-hole (ab Version 6) über dessen REST-API in IP
 ## Inhaltsverzeichnis
 - [PiHole](#pihole)
   - [Inhaltsverzeichnis](#inhaltsverzeichnis)
+  - [Screenshots](#screenshots)
   - [1. Voraussetzungen](#1-voraussetzungen)
   - [2. Funktionsumfang](#2-funktionsumfang)
   - [3. Enthaltene Module](#3-enthaltene-module)
@@ -16,6 +17,10 @@ Diese Bibliothek bindet einen Pi-hole (ab Version 6) über dessen REST-API in IP
   - [5. Konfiguration in IP-Symcon](#5-konfiguration-in-ip-symcon)
   - [6. Spenden](#6-spenden)
   - [7. Lizenz](#7-lizenz)
+
+## Screenshots
+
+![Die Kacheln der Pi-hole Instanzen](docs/screenshots/kacheln.png)
 
 ## 1. Voraussetzungen
 

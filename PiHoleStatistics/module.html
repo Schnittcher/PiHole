@@ -106,6 +106,7 @@ function handleMessage(json) {
   document.getElementById('hDomains').textContent = t.topBlocked;
   document.getElementById('hClients').textContent = t.topClients;
 
+  // Der Verlauf erscheint nur, wenn es Abfragen gibt
   var h = d.history || [], max = 0;
   h.forEach(function (p) { max = Math.max(max, p[0]); });
   _hasSpark = max > 0;
