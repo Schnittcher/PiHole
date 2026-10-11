@@ -1,14 +1,14 @@
 <style>
 .config-toolbar{display:flex;flex-wrap:wrap;gap:.5em;align-items:center;flex:none}
 .config-toolbar input{flex:1;min-width:8em}
-.config-toolbar select{max-width:12em}
+.config-sections{display:flex;flex-wrap:wrap;gap:.4em;flex:none;margin-top:.5em}
 .config-editor input:not([type=checkbox]),.config-editor select,.config-editor textarea{background:var(--c-ui-bg);color:var(--text);border:1px solid var(--c-border);border-radius:.4em;padding:.5em;font:inherit}
 .config-editor option{background:var(--tile-background-color,#222);color:var(--text)}
 .config-status{flex:none;margin:.65em 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .config-status.error{color:var(--bad)}
 .config-fields{flex:1;min-height:0;overflow:auto;user-select:text;-webkit-user-select:text}
-.config-pages{display:flex;gap:.5em;align-items:center;flex:none;padding-top:.5em}
-.config-pages .sub{flex:1;text-align:center}
+.config-pages{display:flex;gap:.5em;align-items:center;flex:none;padding-top:.5em;flex-wrap:wrap}
+.config-pages .sub{flex:1;text-align:center;color:var(--text);font-size:1em;font-weight:500}
 .config-field{padding:.8em .2em;border-top:1px solid var(--c-border)}
 .config-field.changed{border-left:3px solid var(--accent);padding-left:.6em}
 .config-field>label{display:block;font-weight:600;overflow-wrap:anywhere;margin-bottom:.4em}
@@ -26,16 +26,16 @@
 <div class="tile config-editor" id="configEditor">
   <div class="config-toolbar">
     <button class="btn" type="button" id="configLoad"></button>
-    <select id="configSection"></select>
     <input type="search" id="configSearch">
   </div>
-  <div class="config-status" id="configStatus" role="status" aria-live="polite"></div>
-  <div class="config-fields" id="configFields"></div>
+  <div class="config-sections" id="configSection" role="group"></div>
   <div class="config-pages">
     <button class="btn" type="button" id="configPrevious"></button>
     <div class="sub" id="configCount" role="status" aria-live="polite"></div>
     <button class="btn" type="button" id="configNext"></button>
   </div>
+  <div class="config-status" id="configStatus" role="status" aria-live="polite"></div>
+  <div class="config-fields" id="configFields"></div>
   <div class="config-footer">
     <label><input type="checkbox" id="configRestart" checked> <span id="configRestartLabel"></span></label>
     <button class="btn sel" type="button" id="configSave" disabled></button>
@@ -52,12 +52,11 @@
 (function () {
   'use strict';
   var fields = [], changes = new Map(), drafts = new Map(), invalid = new Set(), pending = null, timer = null, connected = false;
-  var page = 0, pageSize = 20, sectionsReady = false, translations = new Map();
+  var page = 0, pageSize = 20, sectionsReady = false, section = '', translations = {};
   var el = function (id) { return document.getElementById('config' + id); };
-  // Die HTML-SDK-Übersetzung kann die Symcon-Brücke verwenden. Gleiche Texte nur einmal abfragen.
+  // Übersetzungen kommen mit dem initialen HTML aus PHP; kein synchroner SDK-Aufruf im Browser.
   var t = function (text) {
-    if (!translations.has(text)) { translations.set(text, typeof translate === 'function' ? translate(text) : text); }
-    return translations.get(text);
+    return Object.prototype.hasOwnProperty.call(translations, text) ? translations[text] : text;
   };
   function status(text, error) { el('Status').textContent = text; el('Status').classList.toggle('error', !!error); }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
@@ -117,18 +116,26 @@
     }).filter(function (option) { return typeof option.value === 'string' || typeof option.value === 'number'; });
   }
   function renderSections() {
-    var oldSection = el('Section').value;
     var sections = Array.from(new Set(fields.map(function (field) { return field.path.split('.')[0]; }))).sort();
-    el('Section').replaceChildren(new Option(t('All sections'), ''));
-    sections.forEach(function (section) {
-      el('Section').add(new Option(section.toUpperCase(), section));
+    if (!sectionsReady || (section && !sections.includes(section))) {
+      section = sections.includes('dns') ? 'dns' : sections[0] || '';
+    }
+    el('Section').replaceChildren();
+    [''].concat(sections).forEach(function (name) {
+      var button = document.createElement('button'); button.type = 'button'; button.className = 'btn config-section';
+      button.dataset.section = name;
+      button.textContent = name ? name.toUpperCase() : t('All sections');
+      button.onclick = function () { section = name; filter(); };
+      el('Section').append(button);
     });
-    // Die erste Ansicht bleibt überschaubar; "Alle Bereiche" ist weiterhin wählbar.
-    el('Section').value = sectionsReady && (oldSection === '' || sections.includes(oldSection)) ? oldSection : sections.includes('dns') ? 'dns' : sections[0] || '';
     sectionsReady = true;
   }
   function renderFields() {
-    var section = el('Section').value, query = el('Search').value.trim().toLowerCase();
+    var query = el('Search').value.trim().toLowerCase();
+    el('Section').querySelectorAll('button').forEach(function (button) {
+      var selected = button.dataset.section === section;
+      button.classList.toggle('sel', selected); button.setAttribute('aria-pressed', String(selected));
+    });
     var matches = fields.filter(function (field) {
       return (!section || field.path.split('.')[0] === section) && (!query || (field.path + ' ' + field.description).toLowerCase().includes(query));
     });
@@ -194,19 +201,22 @@
     el('Fields').scrollTop = 0;
     buttons();
   }
-  el('Load').textContent = t('Reload');
+  function initializeLabels() {
+    el('Load').textContent = t('Reload');
+    el('Section').setAttribute('aria-label', t('Section'));
+    el('Search').placeholder = t('Search settings'); el('Search').setAttribute('aria-label', t('Search settings'));
+    el('Previous').textContent = t('Previous');
+    el('Next').textContent = t('Next');
+    el('RestartLabel').textContent = t('Restart FTL if required');
+    el('Accept').textContent = t('Confirm');
+    el('Cancel').textContent = t('Cancel');
+  }
   el('Load').onclick = load;
-  el('Section').setAttribute('aria-label', t('Section'));
-  el('Search').placeholder = t('Search settings'); el('Search').setAttribute('aria-label', t('Search settings'));
-  el('Search').oninput = filter; el('Section').onchange = filter;
-  el('Previous').textContent = t('Previous');
-  el('Next').textContent = t('Next');
+  el('Search').oninput = filter;
   el('Previous').onclick = function () { page--; renderFields(); };
   el('Next').onclick = function () { page++; renderFields(); };
-  el('RestartLabel').textContent = t('Restart FTL if required');
   el('Restart').onchange = function () { el('Confirm').hidden = true; };
-  el('Accept').textContent = t('Confirm');
-  el('Cancel').textContent = t('Cancel'); el('Cancel').onclick = function () { el('Confirm').hidden = true; };
+  el('Cancel').onclick = function () { el('Confirm').hidden = true; };
   el('Save').onclick = function () {
     var modified = fields.filter(function (field) { return changes.has(field.path); });
     var text = t('Save the following settings?') + '\n' + modified.map(function (field) { return field.path; }).join('\n');
@@ -218,7 +228,7 @@
   };
   window.handleMessage = function (json) {
     var data = JSON.parse(json);
-    if (data.init) { buttons(); load(); return; }
+    if (data.init) { translations = data.t || {}; initializeLabels(); buttons(); load(); return; }
     if (!pending || data.requestID !== pending.id) { return; }
     var sent = pending;
     clearTimeout(timer); pending = null;

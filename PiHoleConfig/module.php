@@ -40,7 +40,25 @@ class PiHoleConfig extends IPSModuleStrict
 
     public function GetVisualizationTile(): string
     {
-        return $this->RenderTile(__DIR__, ['init' => true]);
+        $texts = [
+            'Review changes', 'Loading configuration…', 'Saving configuration…',
+            'No response. Reload to check the current configuration before saving again.',
+            'Reload and discard your unsaved changes?', 'All sections', 'matching settings', 'total',
+            'One entry per line', 'Reload the configuration before saving.', 'Enter a valid number.',
+            'Changes are only applied after saving.', 'Read-only', 'Description and default value',
+            'Default', 'Reload', 'Section', 'Search settings', 'Previous', 'Next',
+            'Restart FTL if required', 'Confirm', 'Cancel', 'Save the following settings?',
+            'FTL may restart briefly to apply these changes.',
+            'A manual FTL restart may be needed to apply these changes.',
+            'Pi-hole may end existing API sessions.', 'Could not load or save configuration.',
+            'Configuration loaded.', 'Saved. Reload to verify the current values on Pi-hole.'
+        ];
+        $translations = [];
+        foreach ($texts as $text) {
+            $translations[$text] = $this->Translate($text);
+        }
+
+        return $this->RenderTile(__DIR__, ['init' => true, 't' => $translations]);
     }
 
     public function RequestAction(string $Ident, mixed $Value): void

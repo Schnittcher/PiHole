@@ -22,17 +22,18 @@ const fields = [
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     const root = path.join(__dirname, '..');
-    const markup = '<style>' + fs.readFileSync(path.join(root, 'libs/tile.css'), 'utf8') + '</style><script>window.requests=[];window.translationCalls={};window.translate=text=>{translationCalls[text]=(translationCalls[text]||0)+1;return text;};window.requestAction=(action,json)=>requests.push({action,...JSON.parse(json)});</script>' + fs.readFileSync(path.join(root, 'PiHoleConfig/module.html'), 'utf8');
+    const markup = '<style>' + fs.readFileSync(path.join(root, 'libs/tile.css'), 'utf8') + '</style><script>window.requests=[];window.translationCalls={};window.translate=text=>{translationCalls[text]=(translationCalls[text]||0)+1;throw new Error("Synchronous SDK translation must not be called");};window.requestAction=(action,json)=>requests.push({action,...JSON.parse(json)});</script>' + fs.readFileSync(path.join(root, 'PiHoleConfig/module.html'), 'utf8');
     await page.setContent(markup);
+    const choose = (target, name) => target.locator('.config-section[data-section="' + name + '"]').click();
     const request = () => page.evaluate(() => requests.at(-1));
     const reply = (data) => page.evaluate(data => handleMessage(JSON.stringify({ requestID: requests.at(-1).requestID, action: requests.at(-1).action, ...data })), data);
     const input = name => page.locator('.config-field').filter({ has: page.locator('label', { hasText: name }) }).locator('input,textarea,select');
     await page.evaluate(() => handleMessage('{"init":true}'));
     assert.equal((await request()).action, 'LoadConfiguration');
     await reply({ ok: true, fields });
-    assert.equal(await page.locator('#configSection').inputValue(), 'dns');
+    assert.equal(await page.locator('.config-section[aria-pressed=true]').getAttribute('data-section'), 'dns');
     assert.equal(await page.locator('.config-field').count(), 5);
-    await page.locator('#configSection').selectOption('');
+    await choose(page, '');
     assert.equal(await page.locator('.config-field').count(), 7);
     assert.equal(await input('dns.interface').isDisabled(), true);
     assert.equal(await input('webserver.api.password').isDisabled(), true);
@@ -119,18 +120,18 @@ const fields = [
     assert.match(await large.locator('#configCount').innerText(), /21–40 \/ 63/);
     await large.locator('#configPrevious').click();
     assert.equal(await large.locator('.config-field').first().locator('input').isChecked(), true);
-    await large.locator('#configSection').selectOption('dhcp');
+    await choose(large, 'dhcp');
     assert.equal(await large.locator('.config-field label').first().innerText(), 'dhcp.setting0');
     assert.match(await large.locator('#configCount').innerText(), /1–20 \/ 24/);
     await large.locator('.config-field').first().locator('input').fill('');
-    await large.locator('#configSection').selectOption('');
+    await choose(large, '');
     assert.match(await large.locator('#configCount').innerText(), /1–20 \/ 167/);
     assert.equal(await large.locator('.config-field').count(), 20);
-    await large.locator('#configSection').selectOption('dhcp');
+    await choose(large, 'dhcp');
     assert.equal(await large.locator('.config-field').first().locator('input').inputValue(), '');
     assert.equal(await large.locator('.config-field').first().locator('input').getAttribute('aria-invalid'), 'true');
     await large.locator('.config-field').first().locator('input').fill('2');
-    await large.locator('#configSection').selectOption('webserver');
+    await choose(large, 'webserver');
     await large.locator('#configSave').click();
     await large.locator('#configAccept').click();
     const largeRequest = await large.evaluate(() => requests.at(-1));
@@ -139,10 +140,10 @@ const fields = [
     const timings = await large.evaluate(() => {
       const timings = [];
       for (let i = 0; i < 30; i++) {
-        const select = document.getElementById('configSection');
-        select.value = i % 2 ? 'dns' : '';
+        const name = i % 2 ? 'dns' : '';
+        const button = document.querySelector('.config-section[data-section="' + name + '"]');
         const start = performance.now();
-        select.dispatchEvent(new Event('change'));
+        button.click();
         timings.push(performance.now() - start);
         if (document.querySelectorAll('.config-field').length > 20) { throw new Error('Too many fields rendered'); }
       }
@@ -150,14 +151,47 @@ const fields = [
     });
     assert.ok(Math.max(...timings) < 500, 'A local filter switch should not block the browser for half a second');
     assert.equal(await large.evaluate(() => requests.length), 2, 'Filtering and paging must not request the API');
-    assert.equal(await large.evaluate(() => Math.max(...Object.values(translationCalls))), 1, 'Each SDK translation should be requested only once');
+    assert.equal(await large.evaluate(() => Object.keys(translationCalls).length), 0, 'The UI must not invoke the synchronous SDK translation');
     await large.locator('#configSearch').fill('does-not-exist');
     assert.equal(await large.locator('.config-field').count(), 0);
     assert.match(await large.locator('#configCount').innerText(), /0 \/ 0 matching/);
     await large.locator('#configSearch').fill('');
     assert.equal(await large.locator('.config-field').count(), 20);
     assert.deepEqual(errors, []);
-    console.log('PASS: 167 settings paginated and filtered locally; drafts survive switches; translation calls cached; max filter time ' + Math.max(...timings).toFixed(1) + ' ms');
+    console.log('PASS: 167 settings paginated and filtered locally; drafts survive switches; no synchronous SDK translation; max filter time ' + Math.max(...timings).toFixed(1) + ' ms');
+
+    if (process.env.CONFIG_TILE_HTML) {
+      // Embed the actual PHP RenderTile output, including the translated initial message.
+      const embedded = await browser.newPage({ viewport: { width: 850, height: 700 } });
+      embedded.on('pageerror', error => errors.push(error.message));
+      await embedded.setContent('<iframe id="tile" style="width:100%;height:650px;border:0"></iframe>');
+      const stub = '<script>window.requests=[];window.translate=()=>{throw new Error("SDK translation called");};window.requestAction=(action,json)=>requests.push({action,...JSON.parse(json)});</script>';
+      await embedded.locator('#tile').evaluate((iframe, html) => { iframe.srcdoc = html; }, stub + fs.readFileSync(process.env.CONFIG_TILE_HTML, 'utf8'));
+      const frame = embedded.frameLocator('#tile');
+      await frame.locator('#configLoad').waitFor();
+      assert.equal(await frame.locator('#configLoad').innerText(), 'Neu laden');
+      const contentFrame = embedded.frames().find(frame => frame !== embedded.mainFrame());
+      await contentFrame.evaluate(fields => handleMessage(JSON.stringify({ requestID: requests.at(-1).requestID, ok: true, fields })), largeFields);
+      assert.match(await frame.locator('#configCount').innerText(), /63 passende Einstellungen · 167 insgesamt/);
+      const checkCounter = async () => {
+        const box = await frame.locator('#configCount').boundingBox();
+        const iframeBox = await embedded.locator('#tile').boundingBox();
+        assert.ok(box && box.y >= iframeBox.y && box.y + box.height < iframeBox.y + iframeBox.height / 2, 'Counter must stay in the visible upper part of the tile');
+      };
+      await checkCounter();
+      await frame.locator('.config-section[data-section=""]').click();
+      assert.match(await frame.locator('#configCount').innerText(), /167 passende Einstellungen/);
+      await frame.locator('#configSearch').fill('dhcp');
+      assert.match(await frame.locator('#configCount').innerText(), /24 passende Einstellungen/);
+      await frame.locator('#configFields').evaluate(element => { element.scrollTop = element.scrollHeight; });
+      await checkCounter();
+      await embedded.setViewportSize({ width: 340, height: 470 });
+      await embedded.locator('#tile').evaluate(element => { element.style.height = '430px'; });
+      await checkCounter();
+      assert.equal(await contentFrame.evaluate(() => requests.length), 1);
+      assert.deepEqual(errors, []);
+      console.log('PASS: PHP-generated tile in an iframe uses German server translations; counter stays visible while filtering and scrolling at compact and full sizes');
+    }
     console.log('All configuration browser checks passed.');
   } finally {
     await browser.close();

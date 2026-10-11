@@ -10,6 +10,7 @@ class IPSModuleStrict
     public array $messages = [];
     public int $visualizationType = 0;
     public bool $active = true;
+    public array $translations = [];
 
     public function Create(): void
     {
@@ -27,7 +28,7 @@ class IPSModuleStrict
     }
     protected function Translate(string $text): string
     {
-        return $text;
+        return $this->translations[$text] ?? $text;
     }
     protected function UpdateVisualizationValue(string $value): void
     {
@@ -91,6 +92,14 @@ function save(array $changes, ?array $fixtures = null, bool $restart = true): Pi
     return $module;
 }
 
+// Optional fixture for a browser test using the exact PHP-generated tile HTML.
+if (in_array('--render', $argv, true)) {
+    $module = new PiHoleConfig();
+    $module->translations = json_decode(file_get_contents(__DIR__ . '/../PiHoleConfig/locale.json'), true)['translations']['de'];
+    echo $module->GetVisualizationTile();
+    exit(0);
+}
+
 $module = new PiHoleConfig();
 $module->Create();
 check($module->visualizationType === 1, 'New instances activate the HTML tile');
@@ -98,6 +107,8 @@ $module->visualizationType = 0;
 $module->ApplyChanges();
 check($module->visualizationType === 1, 'Existing instances activate the HTML tile on ApplyChanges');
 check(str_contains($module->GetVisualizationTile(), 'configEditor'), 'Tile HTML renders without fetching configuration');
+$module->translations = ['Reload' => 'Neu laden'];
+check(str_contains($module->GetVisualizationTile(), 'Neu laden'), 'Translations are embedded by PHP instead of fetched by the browser');
 $module->responses = responses();
 $module->RequestAction('LoadConfiguration', '{"requestID":"load-test"}');
 $reply = $module->messages[0];
