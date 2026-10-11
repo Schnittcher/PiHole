@@ -2,7 +2,7 @@
     "elements": [
         {
             "type": "Label",
-            "caption": "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions."
+            "caption": "Use the browser tile or the PIHCONF functions to read and change the Pi-hole configuration."
         }
     ],
     "actions": [

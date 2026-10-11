@@ -1,0 +1,255 @@
+<style>
+.config-toolbar{display:flex;flex-wrap:wrap;gap:.5em;align-items:center;flex:none}
+.config-toolbar input{flex:1;min-width:8em}
+.config-sections{display:flex;flex-wrap:wrap;gap:.4em;flex:none;margin-top:.5em}
+.config-editor input:not([type=checkbox]),.config-editor select,.config-editor textarea{background:var(--c-ui-bg);color:var(--text);border:1px solid var(--c-border);border-radius:.4em;padding:.5em;font:inherit}
+.config-editor option{background:var(--tile-background-color,#222);color:var(--text)}
+.config-status{flex:none;margin:.65em 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.config-status.error{color:var(--bad)}
+.config-fields{flex:1;min-height:0;overflow:auto;user-select:text;-webkit-user-select:text}
+.config-pages{display:flex;gap:.5em;align-items:center;flex:none;padding-top:.5em;flex-wrap:wrap}
+.config-pages .sub{flex:1;text-align:center;color:var(--text);font-size:1em;font-weight:500}
+.config-field{padding:.8em .2em;border-top:1px solid var(--c-border)}
+.config-field.changed{border-left:3px solid var(--accent);padding-left:.6em}
+.config-field>label{display:block;font-weight:600;overflow-wrap:anywhere;margin-bottom:.4em}
+.config-field input:not([type=checkbox]),.config-field textarea,.config-field select{width:100%}
+.config-field textarea{min-height:5em;resize:vertical}
+.config-field details{font-size:.9em;color:var(--text-sub);margin-top:.4em;white-space:pre-wrap;overflow-wrap:anywhere}
+.config-field summary{cursor:pointer}
+.config-field .reason{color:var(--warn);margin-top:.3em}
+.config-editor :disabled{opacity:.65;cursor:default}
+.config-footer{flex:none;display:flex;align-items:center;gap:.5em;padding-top:.7em;flex-wrap:wrap}
+.config-confirm{flex:none;max-height:35%;overflow:auto;padding:.7em;margin-top:.6em;border:1px solid var(--accent);border-radius:.5em;white-space:pre-wrap;overflow-wrap:anywhere}
+.config-confirm .buttons{display:flex;gap:.5em;margin-top:.6em}
+[hidden]{display:none!important}
+</style>
+<div class="tile config-editor" id="configEditor">
+  <div class="config-toolbar">
+    <button class="btn" type="button" id="configLoad"></button>
+    <input type="search" id="configSearch">
+  </div>
+  <div class="config-sections" id="configSection" role="group"></div>
+  <div class="config-pages">
+    <button class="btn" type="button" id="configPrevious"></button>
+    <div class="sub" id="configCount" role="status" aria-live="polite"></div>
+    <button class="btn" type="button" id="configNext"></button>
+  </div>
+  <div class="config-status" id="configStatus" role="status" aria-live="polite"></div>
+  <div class="config-fields" id="configFields"></div>
+  <div class="config-footer">
+    <label><input type="checkbox" id="configRestart" checked> <span id="configRestartLabel"></span></label>
+    <button class="btn sel" type="button" id="configSave" disabled></button>
+  </div>
+  <div class="config-confirm" id="configConfirm" hidden>
+    <div id="configConfirmText"></div>
+    <div class="buttons">
+      <button class="btn sel" type="button" id="configAccept"></button>
+      <button class="btn" type="button" id="configCancel"></button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var fields = [], changes = new Map(), drafts = new Map(), invalid = new Set(), pending = null, timer = null, connected = false;
+  var page = 0, pageSize = 20, sectionsReady = false, section = '', translations = {};
+  var el = function (id) { return document.getElementById('config' + id); };
+  // Übersetzungen kommen mit dem initialen HTML aus PHP; kein synchroner SDK-Aufruf im Browser.
+  var t = function (text) {
+    return Object.prototype.hasOwnProperty.call(translations, text) ? translations[text] : text;
+  };
+  function status(text, error) { el('Status').textContent = text; el('Status').classList.toggle('error', !!error); }
+  function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+  function buttons() {
+    el('Load').disabled = !!pending;
+    el('Save').disabled = !!pending || !connected || changes.size === 0 || invalid.size > 0;
+    el('Save').textContent = t('Review changes') + ' (' + changes.size + ')';
+    el('Accept').disabled = !!pending;
+    el('Cancel').disabled = !!pending;
+    el('Restart').disabled = !!pending;
+    document.querySelectorAll('.config-field input,.config-field textarea,.config-field select').forEach(function (input) {
+      input.disabled = !!pending || input.dataset.readOnly === 'true';
+    });
+  }
+  function request(action, data) {
+    if (pending) { return; }
+    var id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    pending = { id: id, action: action, changes: Array.from(changes.values()) };
+    buttons();
+    status(t(action === 'LoadConfiguration' ? 'Loading configuration…' : 'Saving configuration…'));
+    timer = setTimeout(function () {
+      pending = null;
+      el('Confirm').hidden = true;
+      // Nach einem Timeout ist unbekannt, ob Pi-hole die Änderung übernommen hat.
+      connected = false;
+      status(t('No response. Reload to check the current configuration before saving again.'), true);
+      buttons();
+    }, 120000);
+    try {
+      requestAction(action, JSON.stringify(Object.assign({ requestID: id }, data)));
+    } catch (error) {
+      clearTimeout(timer); pending = null;
+      status(String(error.message || error), true); buttons();
+    }
+  }
+  function load() {
+    if (changes.size || invalid.size) {
+      confirmAction(t('Reload and discard your unsaved changes?'), function () { request('LoadConfiguration', {}); });
+    } else {
+      request('LoadConfiguration', {});
+    }
+  }
+  function confirmAction(text, action) {
+    el('ConfirmText').textContent = text;
+    el('Confirm').hidden = false;
+    el('Accept').onclick = function () { el('Confirm').hidden = true; action(); };
+  }
+  function filter() {
+    page = 0;
+    el('Confirm').hidden = true;
+    renderFields();
+  }
+  function options(field) {
+    if (field.type.indexOf('enum') !== 0 || !Array.isArray(field.allowed)) { return null; }
+    return field.allowed.map(function (option) {
+      return typeof option === 'object' && option !== null ? { value: option.item, label: String(option.item) + (option.description ? ' — ' + option.description : '') } : { value: option, label: String(option) };
+    }).filter(function (option) { return typeof option.value === 'string' || typeof option.value === 'number'; });
+  }
+  function renderSections() {
+    var sections = Array.from(new Set(fields.map(function (field) { return field.path.split('.')[0]; }))).sort();
+    if (!sectionsReady || (section && !sections.includes(section))) {
+      section = sections.includes('dns') ? 'dns' : sections[0] || '';
+    }
+    el('Section').replaceChildren();
+    [''].concat(sections).forEach(function (name) {
+      var button = document.createElement('button'); button.type = 'button'; button.className = 'btn config-section';
+      button.dataset.section = name;
+      button.textContent = name ? name.toUpperCase() : t('All sections');
+      button.onclick = function () { section = name; filter(); };
+      el('Section').append(button);
+    });
+    sectionsReady = true;
+  }
+  function renderFields() {
+    var query = el('Search').value.trim().toLowerCase();
+    el('Section').querySelectorAll('button').forEach(function (button) {
+      var selected = button.dataset.section === section;
+      button.classList.toggle('sel', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+    var matches = fields.filter(function (field) {
+      return (!section || field.path.split('.')[0] === section) && (!query || (field.path + ' ' + field.description).toLowerCase().includes(query));
+    });
+    page = Math.max(0, Math.min(page, Math.ceil(matches.length / pageSize) - 1));
+    var start = page * pageSize, visible = matches.slice(start, start + pageSize), fragment = document.createDocumentFragment();
+    el('Count').textContent = (matches.length ? (start + 1) + '–' + (start + visible.length) : '0') + ' / ' + matches.length + ' ' + t('matching settings') + ' · ' + fields.length + ' ' + t('total');
+    el('Previous').disabled = page === 0;
+    el('Next').disabled = start + pageSize >= matches.length;
+    visible.forEach(function (field, index) {
+      var row = document.createElement('div'); row.className = 'config-field';
+      row.classList.toggle('changed', changes.has(field.path) || invalid.has(field.path));
+      var label = document.createElement('label'); label.textContent = field.path;
+      var opts = options(field), input;
+      if (opts && opts.length) {
+        input = document.createElement('select');
+        opts.forEach(function (option, i) { input.add(new Option(option.label, String(i))); });
+        var selected = opts.findIndex(function (option) { return same(option.value, field.value); });
+        if (selected < 0) { opts.push({ value: field.value, label: String(field.value) }); input.add(new Option(String(field.value), String(opts.length - 1))); selected = opts.length - 1; }
+        input.value = String(selected);
+      } else if (Array.isArray(field.value)) {
+        input = document.createElement('textarea'); input.value = field.value.join('\n');
+        input.placeholder = t('One entry per line');
+      } else {
+        input = document.createElement('input');
+        input.type = typeof field.value === 'boolean' ? 'checkbox' : typeof field.value === 'number' ? 'number' : 'text';
+        if (input.type === 'checkbox') { input.checked = field.value; }
+        else { input.value = field.value === null ? '' : String(field.value); }
+        if (input.type === 'number') { input.step = field.type.indexOf('integer') >= 0 ? '1' : 'any'; }
+      }
+      input.id = 'configValue' + index; label.htmlFor = input.id;
+      input.dataset.readOnly = String(field.readOnly); input.disabled = field.readOnly;
+      if (drafts.has(field.path)) {
+        var draft = drafts.get(field.path);
+        input.value = draft.value; input.checked = draft.checked;
+      }
+      input.setAttribute('aria-invalid', String(invalid.has(field.path)));
+      input.oninput = function () {
+        el('Confirm').hidden = true;
+        drafts.set(field.path, { value: input.value, checked: input.checked });
+        var value = opts && opts.length ? opts[Number(input.value)].value : input.type === 'checkbox' ? input.checked : Array.isArray(field.value) ? input.value.split(/\r?\n/).filter(function (line) { return line.trim() !== ''; }) : input.type === 'number' ? Number(input.value) : input.value;
+        var bad = input.type === 'number' && (input.value.trim() === '' || !Number.isFinite(value) || (field.type.indexOf('integer') >= 0 && !Number.isSafeInteger(value)));
+        input.setAttribute('aria-invalid', String(bad));
+        if (bad) { invalid.add(field.path); changes.delete(field.path); }
+        else {
+          invalid.delete(field.path);
+          if (same(value, field.value)) { changes.delete(field.path); }
+          else { changes.set(field.path, { path: field.path, value: value, original: field.value }); }
+        }
+        row.classList.toggle('changed', bad || changes.has(field.path));
+        status(t(!connected ? 'Reload the configuration before saving.' : bad ? 'Enter a valid number.' : 'Changes are only applied after saving.'), bad || !connected);
+        buttons();
+      };
+      row.append(label, input);
+      if (Array.isArray(field.value)) { var hint = document.createElement('div'); hint.className = 'sub'; hint.textContent = t('One entry per line'); row.append(hint); }
+      if (field.readOnly) { var reason = document.createElement('div'); reason.className = 'reason'; reason.textContent = t('Read-only') + ': ' + field.reason; row.append(reason); }
+      var details = document.createElement('details'), summary = document.createElement('summary');
+      summary.textContent = t('Description and default value'); details.append(summary);
+      var description = document.createElement('div'); description.textContent = field.description + '\n' + t('Default') + ': ' + JSON.stringify(field.default);
+      if (typeof field.allowed === 'string') { description.textContent += '\n' + field.allowed; }
+      details.append(description); row.append(details); fragment.append(row);
+    });
+    el('Fields').replaceChildren(fragment);
+    el('Fields').scrollTop = 0;
+    buttons();
+  }
+  function initializeLabels() {
+    el('Load').textContent = t('Reload');
+    el('Section').setAttribute('aria-label', t('Section'));
+    el('Search').placeholder = t('Search settings'); el('Search').setAttribute('aria-label', t('Search settings'));
+    el('Previous').textContent = t('Previous');
+    el('Next').textContent = t('Next');
+    el('RestartLabel').textContent = t('Restart FTL if required');
+    el('Accept').textContent = t('Confirm');
+    el('Cancel').textContent = t('Cancel');
+  }
+  el('Load').onclick = load;
+  el('Search').oninput = filter;
+  el('Previous').onclick = function () { page--; renderFields(); };
+  el('Next').onclick = function () { page++; renderFields(); };
+  el('Restart').onchange = function () { el('Confirm').hidden = true; };
+  el('Cancel').onclick = function () { el('Confirm').hidden = true; };
+  el('Save').onclick = function () {
+    var modified = fields.filter(function (field) { return changes.has(field.path); });
+    var text = t('Save the following settings?') + '\n' + modified.map(function (field) { return field.path; }).join('\n');
+    if (modified.some(function (field) { return field.restart; })) {
+      text += '\n\n' + t(el('Restart').checked ? 'FTL may restart briefly to apply these changes.' : 'A manual FTL restart may be needed to apply these changes.');
+    }
+    if (modified.some(function (field) { return field.sessionReset; })) { text += '\n\n' + t('Pi-hole may end existing API sessions.'); }
+    confirmAction(text, function () { request('SaveConfiguration', { changes: Array.from(changes.values()), restart: el('Restart').checked }); });
+  };
+  window.handleMessage = function (json) {
+    var data = JSON.parse(json);
+    if (data.init) { translations = data.t || {}; initializeLabels(); buttons(); load(); return; }
+    if (!pending || data.requestID !== pending.id) { return; }
+    var sent = pending;
+    clearTimeout(timer); pending = null;
+    if (!data.ok) {
+      if (sent.action === 'LoadConfiguration') { connected = false; }
+      status(data.error || t('Could not load or save configuration.'), true);
+      buttons(); return;
+    }
+    connected = true;
+    if (sent.action === 'LoadConfiguration') {
+      fields = data.fields; changes.clear(); drafts.clear(); invalid.clear(); page = 0;
+      renderSections(); renderFields(); status(t('Configuration loaded.'));
+    } else {
+      sent.changes.forEach(function (change) {
+        var field = fields.find(function (item) { return item.path === change.path; });
+        if (field) { field.value = change.value; }
+      });
+      changes.clear(); drafts.clear(); invalid.clear(); renderFields();
+      status(t('Saved. Reload to verify the current values on Pi-hole.'));
+    }
+    buttons();
+  };
+})();
+</script>

@@ -1,7 +1,47 @@
 {
     "translations": {
         "de": {
-            "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions.": "Diese Instanz hat keine Einstellungen. Die Pi-hole Konfiguration wird mit den PIHCONF-Funktionen gelesen und geändert."
+            "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions.": "Diese Instanz hat keine Einstellungen. Die Pi-hole Konfiguration wird mit den PIHCONF-Funktionen gelesen und geändert.",
+            "Use the browser tile or the PIHCONF functions to read and change the Pi-hole configuration.": "Die Pi-hole-Konfiguration kann in der Browser-Kachel oder über die PIHCONF-Funktionen gelesen und geändert werden.",
+            "Unexpected configuration response from Pi-hole.": "Unerwartete Konfigurationsantwort vom Pi-hole.",
+            "Read-only": "Schreibgeschützt",
+            "Change passwords and secrets in the Pi-hole web interface.": "Passwörter und Geheimnisse direkt in der Pi-hole-Weboberfläche ändern.",
+            "Set via environment variable": "Durch eine Umgebungsvariable festgelegt",
+            "This value cannot be edited in the browser.": "Dieser Wert kann im Browser nicht bearbeitet werden.",
+            "Invalid configuration changes.": "Ungültige Konfigurationsänderungen.",
+            "Value changed on Pi-hole. Reload before saving.": "Der Wert wurde auf dem Pi-hole geändert. Vor dem Speichern neu laden.",
+            "Invalid value or type.": "Ungültiger Wert oder Datentyp.",
+            "Pi-hole not reachable": "Pi-hole nicht erreichbar",
+            "Review changes": "Änderungen prüfen",
+            "Loading configuration…": "Konfiguration wird geladen…",
+            "Saving configuration…": "Konfiguration wird gespeichert…",
+            "No response. Reload to check the current configuration before saving again.": "Keine Antwort. Vor dem erneuten Speichern neu laden und den aktuellen Stand prüfen.",
+            "Reload and discard your unsaved changes?": "Neu laden und ungespeicherte Änderungen verwerfen?",
+            "All sections": "Alle Bereiche",
+            "Previous": "Zurück",
+            "Next": "Weiter",
+            "matching settings": "passende Einstellungen",
+            "total": "insgesamt",
+            "Configuration loaded.": "Konfiguration geladen.",
+            "One entry per line": "Ein Eintrag pro Zeile",
+            "Enter a valid number.": "Bitte eine gültige Zahl eingeben.",
+            "Changes are only applied after saving.": "Änderungen werden erst beim Speichern übernommen.",
+            "Reload the configuration before saving.": "Vor dem Speichern die Konfiguration neu laden.",
+            "Description and default value": "Beschreibung und Standardwert",
+            "Default": "Standardwert",
+            "Reload": "Neu laden",
+            "Section": "Bereich",
+            "Search settings": "Einstellungen suchen",
+            "Restart FTL if required": "FTL bei Bedarf neu starten",
+            "Confirm": "Bestätigen",
+            "Cancel": "Abbrechen",
+            "Save the following settings?": "Folgende Einstellungen speichern?",
+            "FTL may restart briefly to apply these changes.": "FTL kann zur Übernahme der Änderungen kurz neu starten.",
+            "A manual FTL restart may be needed to apply these changes.": "Zur Übernahme der Änderungen kann ein manueller FTL-Neustart erforderlich sein.",
+            "Pi-hole may end existing API sessions.": "Pi-hole kann bestehende API-Sitzungen beenden.",
+            "Could not load or save configuration.": "Konfiguration konnte nicht geladen oder gespeichert werden.",
+            "settings loaded.": "Einstellungen geladen.",
+            "Saved. Reload to verify the current values on Pi-hole.": "Gespeichert. Mit „Neu laden“ die aktuellen Werte auf dem Pi-hole prüfen."
         }
     }
 }

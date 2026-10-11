@@ -1,5 +1,5 @@
 # PiHole Config
-Liest und ändert die Konfiguration des Pi-holes per Skript. Die Instanz braucht den PiHole Splitter und wird manuell angelegt. Sie hat keine Einstellungen und keine Variablen.
+Liest und ändert die Konfiguration des Pi-holes per Skript oder in einer Browser-Kachel der Symcon-Visualisierung. Die Instanz braucht den PiHole Splitter und kann über den PiHole Configurator angelegt werden. Sie hat keine eigenen Einstellungen und keine Variablen.
 
 ## Inhaltsverzeichnis
 - [PiHole Config](#pihole-config)
@@ -12,6 +12,19 @@ Liest und ändert die Konfiguration des Pi-holes per Skript. Die Instanz braucht
 
 ## 1. Konfiguration
 Die Instanz hat keine Einstellungen.
+
+### Browser-Kachel
+Die Instanz in die Kachel-Visualisierung aufnehmen und für die Bearbeitung maximieren. Bei bereits vorhandenen Instanzen nach dem Modulupdate einmal „Änderungen übernehmen“ ausführen, um die Kachel zu aktivieren.
+
+Beim Öffnen lädt die Kachel die Konfiguration samt Beschreibungen und Standardwerten vom Pi-hole und zeigt zunächst den Bereich DNS. Die Bereichsschaltflächen und die Suche grenzen die angezeigten Einstellungen ein. Es werden höchstens 20 Einstellungen pro Seite aufgebaut; „Zurück“ und „Weiter“ blättern durch die Treffer. Der Zähler steht über der Liste und zeigt die aktuell sichtbaren Treffer, die Trefferzahl des Filters und die Gesamtzahl. Bereichswechsel und Suche arbeiten lokal ohne erneuten API-Aufruf. Die Texte der Bedienoberfläche werden bereits in PHP übersetzt; die Kachel ruft beim Bedienen keine JavaScript-Übersetzung über die Symcon-Brücke auf. Ungespeicherte Eingaben bleiben beim Filtern und Blättern erhalten. Schalter, Zahlen, Texte, Auswahllisten und Listen lassen sich direkt bearbeiten; in Listen steht ein Eintrag pro Zeile. Die Beschreibungen stammen vom Pi-hole und können auf Englisch sein.
+
+Änderungen werden erst mit „Änderungen prüfen“ und anschließender Bestätigung gespeichert. Es werden nur die geänderten Einstellungen übertragen. „FTL bei Bedarf neu starten“ ist standardmäßig aktiviert; ohne diese Option ist für manche Änderungen ein manueller FTL-Neustart nötig. Die Bestätigung weist auf einen möglichen Neustart oder das Beenden von API-Sitzungen hin. Nach dem Speichern mit „Neu laden“ die vom Pi-hole übernommenen Werte kontrollieren.
+
+Schreibgeschützte Einstellungen werden mit dem vom Pi-hole angegebenen Grund angezeigt. Passwörter und Geheimnisse sind in der Kachel maskiert und werden weiterhin direkt in der Pi-hole-Weboberfläche geändert. Bei App-Passwörtern muss Pi-hole Konfigurationsänderungen zulassen (`webserver.api.app_sudo`); andernfalls zeigt die Kachel die API-Fehlermeldung an.
+
+Vor dem Speichern prüft das Modul den aktuellen Schreibschutz und die Datentypen erneut. Hat sich ein bearbeiteter Wert seit dem Laden auf dem Pi-hole geändert, wird der Speichervorgang abgewiesen. „Neu laden“ übernimmt dann die aktuellen Werte; vorhandene Entwürfe werden erst nach Bestätigung verworfen. Diese Prüfung verhindert bekannte veraltete Änderungen, ersetzt aber keine atomare Transaktion mit anderen gleichzeitig schreibenden Clients.
+
+Die unten aufgeführten Skriptfunktionen bleiben unverändert verfügbar.
 
 ## 2. Variablen
 Die Instanz legt keine Variablen an.
