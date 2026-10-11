@@ -61,7 +61,7 @@ Die einzelnen Funktionen stehen bei den Instanzen unter "Enthaltene Module" und 
 * [PiHole Network](PiHoleNetwork/README.md)
   * Netzwerkgeräte, Routen, Schnittstellen und DHCP-Leases.
 * [PiHole Config](PiHoleConfig/README.md)
-  * Lesen und Ändern der Pi-hole Konfiguration per Skript.
+  * Lesen und Ändern der Pi-hole Konfiguration per Skript oder Browser-Kachel.
 
 ## 4. Installation
 Die Installation erfolgt über den IP-Symcon Module Store.
