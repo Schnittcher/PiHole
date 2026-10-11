@@ -22,6 +22,8 @@ class PiHoleSplitter extends IPSModuleStrict
 
         $this->RegisterAttributeString('SessionID', '');
         $this->RegisterAttributeInteger('SessionValidUntil', 0);
+        // Letzte protokollierte Anmeldefehler-Meldung, damit dieselbe Meldung nicht bei jeder Abfrage erneut im Log steht
+        $this->RegisterAttributeString('LastLoginError', '');
 
         $this->RegisterVariableBoolean('Connected', $this->Translate('Connected'), ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION], 1);
     }
@@ -33,6 +35,7 @@ class PiHoleSplitter extends IPSModuleStrict
 
         // Geänderte Zugangsdaten: alte Sitzung freigeben, Pi-hole begrenzt die Anzahl der Sitzungen
         $this->Logout();
+        $this->WriteAttributeString('LastLoginError', '');
 
         $this->SetStatus($this->ReadPropertyString('Host') === '' ? IS_INACTIVE : IS_ACTIVE);
     }
@@ -170,10 +173,16 @@ class PiHoleSplitter extends IPSModuleStrict
         $session = $result['Data']['session'] ?? [];
         if ($result['Code'] !== 200 || !is_string($session['sid'] ?? null)) {
             $this->WriteAttributeString('SessionID', '');
-            $this->LogMessage($this->Translate('Pi-hole login failed'), KL_ERROR);
+            // Nicht erreichbar und falsches Passwort unterscheiden, und jede Meldung nur einmal protokollieren, bis sich etwas ändert
+            $text = $result['Code'] === 0 ? 'Pi-hole not reachable' : 'Pi-hole login failed, check the password or app password';
+            if ($this->ReadAttributeString('LastLoginError') !== $text) {
+                $this->WriteAttributeString('LastLoginError', $text);
+                $this->LogMessage($this->Translate($text), KL_ERROR);
+            }
 
             return false;
         }
+        $this->WriteAttributeString('LastLoginError', '');
         $this->WriteAttributeString('SessionID', $session['sid']);
         // Jede erfolgreiche Anfrage verlängert die Sitzung am Pi-hole; sicherheitshalber früher erneuern
         $this->WriteAttributeInteger('SessionValidUntil', time() + max(30, (int) ($session['validity'] ?? 300) - 10));

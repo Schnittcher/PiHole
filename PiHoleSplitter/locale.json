@@ -16,7 +16,7 @@
             "Login failed, please check the password": "Anmeldung fehlgeschlagen, bitte Passwort prüfen",
             "Connection successful, Pi-hole core %s": "Verbindung erfolgreich, Pi-hole Core %s",
             "Unexpected answer (HTTP %d)": "Unerwartete Antwort (HTTP %d)",
-            "Pi-hole login failed": "Pi-hole Anmeldung fehlgeschlagen"
+            "Pi-hole login failed, check the password or app password": "Anmeldung am Pi-hole fehlgeschlagen, Passwort oder App-Passwort prüfen"
         }
     }
 }
