@@ -13,14 +13,6 @@ class PiHoleDNS extends IPSModuleStrict
     use PiHoleClient;
     use PiHoleTile;
 
-    public function GetCompatibleParents(): string
-    {
-        return json_encode([
-            'type'      => 'connect',
-            'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']
-        ]);
-    }
-
     public function Create(): void
     {
         //Never delete this line!
@@ -40,6 +32,15 @@ class PiHoleDNS extends IPSModuleStrict
         $this->RegisterAttributeInteger('PauseTotal', 0);
         $this->RegisterTimer('Update', 0, 'PIHDNS_Update($_IPS[\'TARGET\']);');
         $this->SetVisualizationType(1);
+    }
+
+    /**
+     * Mit IPSModuleStrict gibt es kein ConnectParent: Die Verwaltungskonsole schlägt den Splitter vor,
+     * einen vorhandenen oder beim Anlegen einen neuen.
+     */
+    public function GetCompatibleParents(): string
+    {
+        return json_encode(['type' => 'connect', 'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']]);
     }
 
     public function ApplyChanges(): void
