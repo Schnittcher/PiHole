@@ -7,6 +7,8 @@
 .config-status{flex:none;margin:.65em 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .config-status.error{color:var(--bad)}
 .config-fields{flex:1;min-height:0;overflow:auto;user-select:text;-webkit-user-select:text}
+.config-pages{display:flex;gap:.5em;align-items:center;flex:none;padding-top:.5em}
+.config-pages .sub{flex:1;text-align:center}
 .config-field{padding:.8em .2em;border-top:1px solid var(--c-border)}
 .config-field.changed{border-left:3px solid var(--accent);padding-left:.6em}
 .config-field>label{display:block;font-weight:600;overflow-wrap:anywhere;margin-bottom:.4em}
@@ -29,6 +31,11 @@
   </div>
   <div class="config-status" id="configStatus" role="status" aria-live="polite"></div>
   <div class="config-fields" id="configFields"></div>
+  <div class="config-pages">
+    <button class="btn" type="button" id="configPrevious"></button>
+    <div class="sub" id="configCount" role="status" aria-live="polite"></div>
+    <button class="btn" type="button" id="configNext"></button>
+  </div>
   <div class="config-footer">
     <label><input type="checkbox" id="configRestart" checked> <span id="configRestartLabel"></span></label>
     <button class="btn sel" type="button" id="configSave" disabled></button>
@@ -44,9 +51,14 @@
 <script>
 (function () {
   'use strict';
-  var fields = [], changes = new Map(), invalid = new Set(), pending = null, timer = null, connected = false;
+  var fields = [], changes = new Map(), drafts = new Map(), invalid = new Set(), pending = null, timer = null, connected = false;
+  var page = 0, pageSize = 20, sectionsReady = false, translations = new Map();
   var el = function (id) { return document.getElementById('config' + id); };
-  var t = function (text) { return typeof translate === 'function' ? translate(text) : text; };
+  // Die HTML-SDK-Übersetzung kann die Symcon-Brücke verwenden. Gleiche Texte nur einmal abfragen.
+  var t = function (text) {
+    if (!translations.has(text)) { translations.set(text, typeof translate === 'function' ? translate(text) : text); }
+    return translations.get(text);
+  };
   function status(text, error) { el('Status').textContent = text; el('Status').classList.toggle('error', !!error); }
   function same(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
   function buttons() {
@@ -94,10 +106,9 @@
     el('Accept').onclick = function () { el('Confirm').hidden = true; action(); };
   }
   function filter() {
-    var section = el('Section').value, query = el('Search').value.toLowerCase();
-    document.querySelectorAll('.config-field').forEach(function (row) {
-      row.hidden = (section && row.dataset.section !== section) || (query && row.dataset.search.indexOf(query) < 0);
-    });
+    page = 0;
+    el('Confirm').hidden = true;
+    renderFields();
   }
   function options(field) {
     if (field.type.indexOf('enum') !== 0 || !Array.isArray(field.allowed)) { return null; }
@@ -105,17 +116,30 @@
       return typeof option === 'object' && option !== null ? { value: option.item, label: String(option.item) + (option.description ? ' — ' + option.description : '') } : { value: option, label: String(option) };
     }).filter(function (option) { return typeof option.value === 'string' || typeof option.value === 'number'; });
   }
-  function renderFields() {
-    el('Fields').replaceChildren();
+  function renderSections() {
     var oldSection = el('Section').value;
+    var sections = Array.from(new Set(fields.map(function (field) { return field.path.split('.')[0]; }))).sort();
     el('Section').replaceChildren(new Option(t('All sections'), ''));
-    Array.from(new Set(fields.map(function (field) { return field.path.split('.')[0]; }))).sort().forEach(function (section) {
+    sections.forEach(function (section) {
       el('Section').add(new Option(section.toUpperCase(), section));
     });
-    el('Section').value = oldSection;
-    fields.forEach(function (field, index) {
+    // Die erste Ansicht bleibt überschaubar; "Alle Bereiche" ist weiterhin wählbar.
+    el('Section').value = sectionsReady && (oldSection === '' || sections.includes(oldSection)) ? oldSection : sections.includes('dns') ? 'dns' : sections[0] || '';
+    sectionsReady = true;
+  }
+  function renderFields() {
+    var section = el('Section').value, query = el('Search').value.trim().toLowerCase();
+    var matches = fields.filter(function (field) {
+      return (!section || field.path.split('.')[0] === section) && (!query || (field.path + ' ' + field.description).toLowerCase().includes(query));
+    });
+    page = Math.max(0, Math.min(page, Math.ceil(matches.length / pageSize) - 1));
+    var start = page * pageSize, visible = matches.slice(start, start + pageSize), fragment = document.createDocumentFragment();
+    el('Count').textContent = (matches.length ? (start + 1) + '–' + (start + visible.length) : '0') + ' / ' + matches.length + ' ' + t('matching settings') + ' · ' + fields.length + ' ' + t('total');
+    el('Previous').disabled = page === 0;
+    el('Next').disabled = start + pageSize >= matches.length;
+    visible.forEach(function (field, index) {
       var row = document.createElement('div'); row.className = 'config-field';
-      row.dataset.section = field.path.split('.')[0]; row.dataset.search = (field.path + ' ' + field.description).toLowerCase();
+      row.classList.toggle('changed', changes.has(field.path) || invalid.has(field.path));
       var label = document.createElement('label'); label.textContent = field.path;
       var opts = options(field), input;
       if (opts && opts.length) {
@@ -136,8 +160,14 @@
       }
       input.id = 'configValue' + index; label.htmlFor = input.id;
       input.dataset.readOnly = String(field.readOnly); input.disabled = field.readOnly;
+      if (drafts.has(field.path)) {
+        var draft = drafts.get(field.path);
+        input.value = draft.value; input.checked = draft.checked;
+      }
+      input.setAttribute('aria-invalid', String(invalid.has(field.path)));
       input.oninput = function () {
         el('Confirm').hidden = true;
+        drafts.set(field.path, { value: input.value, checked: input.checked });
         var value = opts && opts.length ? opts[Number(input.value)].value : input.type === 'checkbox' ? input.checked : Array.isArray(field.value) ? input.value.split(/\r?\n/).filter(function (line) { return line.trim() !== ''; }) : input.type === 'number' ? Number(input.value) : input.value;
         var bad = input.type === 'number' && (input.value.trim() === '' || !Number.isFinite(value) || (field.type.indexOf('integer') >= 0 && !Number.isSafeInteger(value)));
         input.setAttribute('aria-invalid', String(bad));
@@ -158,15 +188,21 @@
       summary.textContent = t('Description and default value'); details.append(summary);
       var description = document.createElement('div'); description.textContent = field.description + '\n' + t('Default') + ': ' + JSON.stringify(field.default);
       if (typeof field.allowed === 'string') { description.textContent += '\n' + field.allowed; }
-      details.append(description); row.append(details); el('Fields').append(row);
+      details.append(description); row.append(details); fragment.append(row);
     });
-    filter(); buttons();
+    el('Fields').replaceChildren(fragment);
+    el('Fields').scrollTop = 0;
+    buttons();
   }
   el('Load').textContent = t('Reload');
   el('Load').onclick = load;
   el('Section').setAttribute('aria-label', t('Section'));
   el('Search').placeholder = t('Search settings'); el('Search').setAttribute('aria-label', t('Search settings'));
   el('Search').oninput = filter; el('Section').onchange = filter;
+  el('Previous').textContent = t('Previous');
+  el('Next').textContent = t('Next');
+  el('Previous').onclick = function () { page--; renderFields(); };
+  el('Next').onclick = function () { page++; renderFields(); };
   el('RestartLabel').textContent = t('Restart FTL if required');
   el('Restart').onchange = function () { el('Confirm').hidden = true; };
   el('Accept').textContent = t('Confirm');
@@ -193,14 +229,14 @@
     }
     connected = true;
     if (sent.action === 'LoadConfiguration') {
-      fields = data.fields; changes.clear(); invalid.clear();
-      renderFields(); status(fields.length + ' ' + t('settings loaded.'));
+      fields = data.fields; changes.clear(); drafts.clear(); invalid.clear(); page = 0;
+      renderSections(); renderFields(); status(t('Configuration loaded.'));
     } else {
       sent.changes.forEach(function (change) {
         var field = fields.find(function (item) { return item.path === change.path; });
         if (field) { field.value = change.value; }
       });
-      changes.clear(); invalid.clear(); renderFields();
+      changes.clear(); drafts.clear(); invalid.clear(); renderFields();
       status(t('Saved. Reload to verify the current values on Pi-hole.'));
     }
     buttons();
