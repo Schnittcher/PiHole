@@ -27,13 +27,20 @@ class PiHoleMaintenance extends IPSModuleStrict
         //Never delete this line!
         parent::Create();
 
-        $this->ConnectParent('{7F1B108F-2DCE-496E-8BAE-8103685BF11E}');
-
         $this->RegisterVariableInteger('Action', $this->Translate('Action'), $this->ActionPresentation(), 1);
         $this->EnableAction('Action');
         $this->RegisterVariableString('LastResult', $this->Translate('Last result'), ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION], 2);
         $this->SetVisualizationType(1);
         $this->RegisterVariableInteger('LastRun', $this->Translate('Last run'), ['PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME, 'DATE' => 1, 'MONTH_TEXT' => false, 'DAY_OF_THE_WEEK' => false, 'TIME' => 2], 3);
+    }
+
+    /**
+     * Mit IPSModuleStrict gibt es kein ConnectParent: Die Verwaltungskonsole schlägt den Splitter vor,
+     * einen vorhandenen oder beim Anlegen einen neuen.
+     */
+    public function GetCompatibleParents(): string
+    {
+        return json_encode(['type' => 'connect', 'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']]);
     }
 
     public function RequestAction(string $Ident, mixed $Value): void

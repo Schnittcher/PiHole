@@ -18,7 +18,6 @@ class PiHoleNetwork extends IPSModuleStrict
         //Never delete this line!
         parent::Create();
 
-        $this->ConnectParent('{7F1B108F-2DCE-496E-8BAE-8103685BF11E}');
         $this->RegisterMessage($this->InstanceID, FM_CONNECT);
 
         $this->RegisterPropertyInteger('UpdateInterval', 300);
@@ -29,6 +28,15 @@ class PiHoleNetwork extends IPSModuleStrict
 
         $this->RegisterTimer('Update', 0, 'PIHNET_Update($_IPS[\'TARGET\']);');
         $this->SetVisualizationType(1);
+    }
+
+    /**
+     * Mit IPSModuleStrict gibt es kein ConnectParent: Die Verwaltungskonsole schlägt den Splitter vor,
+     * einen vorhandenen oder beim Anlegen einen neuen.
+     */
+    public function GetCompatibleParents(): string
+    {
+        return json_encode(['type' => 'connect', 'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']]);
     }
 
     public function ApplyChanges(): void
