@@ -26,12 +26,19 @@ class PiHoleFilters extends IPSModuleStrict
         'DeniedRegex'   => ['Denied domains (regex)', 'ftl.database.regex.denied.total']
     ];
 
+    public function GetCompatibleParents(): string
+    {
+        return json_encode([
+            'type'      => 'connect',
+            'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']
+        ]);
+    }
+
     public function Create(): void
     {
         //Never delete this line!
         parent::Create();
 
-        $this->ConnectParent('{7F1B108F-2DCE-496E-8BAE-8103685BF11E}');
         $this->RegisterMessage($this->InstanceID, FM_CONNECT);
 
         $this->RegisterPropertyInteger('UpdateInterval', 300);

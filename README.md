@@ -1,5 +1,5 @@
 [![Version](https://img.shields.io/badge/Symcon-PHPModul-red.svg)](https://www.symcon.de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/)
-![Version](https://img.shields.io/badge/Symcon%20Version-8.1%20%3E-blue.svg)
+![Version](https://img.shields.io/badge/Symcon%20Version-8.2%20%3E-blue.svg)
 [![License](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-green.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![Check Style](https://github.com/Schnittcher/PiHole/actions/workflows/style.yml/badge.svg)](https://github.com/Schnittcher/PiHole/actions/workflows/style.yml)
 [![Tests](https://github.com/Schnittcher/PiHole/actions/workflows/tests.yml/badge.svg)](https://github.com/Schnittcher/PiHole/actions/workflows/tests.yml)
@@ -25,7 +25,7 @@ Diese Bibliothek bindet einen Pi-hole (ab Version 6) über dessen REST-API in IP
 
 ## 1. Voraussetzungen
 
-* mindestens IPS Version 8.1
+* mindestens IPS Version 8.2
 * Pi-hole ab Version 6 (REST-API)
 * Passwort oder App-Passwort des Pi-holes (entfällt, wenn kein Passwort gesetzt ist)
 

@@ -22,12 +22,19 @@ class PiHoleMaintenance extends IPSModuleStrict
         5 => ['action/flush/network', 'Flush network table']
     ];
 
+    public function GetCompatibleParents(): string
+    {
+        return json_encode([
+            'type'      => 'connect',
+            'moduleIDs' => ['{7F1B108F-2DCE-496E-8BAE-8103685BF11E}']
+        ]);
+    }
+
     public function Create(): void
     {
         //Never delete this line!
         parent::Create();
 
-        $this->ConnectParent('{7F1B108F-2DCE-496E-8BAE-8103685BF11E}');
 
         $this->RegisterVariableInteger('Action', $this->Translate('Action'), $this->ActionPresentation(), 1);
         $this->EnableAction('Action');

@@ -4,7 +4,7 @@
     "name": "PiHole",
     "url": "https://github.com/Schnittcher/PiHole",
     "compatibility": {
-        "version": "8.1"
+        "version": "8.2"
     },
     "version": "2.0",
     "build": 0,
