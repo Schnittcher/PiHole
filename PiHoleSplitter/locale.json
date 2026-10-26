@@ -16,7 +16,9 @@
             "Login failed, please check the password": "Anmeldung fehlgeschlagen, bitte Passwort prüfen",
             "Connection successful, Pi-hole core %s": "Verbindung erfolgreich, Pi-hole Core %s",
             "Unexpected answer (HTTP %d)": "Unerwartete Antwort (HTTP %d)",
-            "Pi-hole login failed, check the password or app password": "Anmeldung am Pi-hole fehlgeschlagen, Passwort oder App-Passwort prüfen"
+            "Pi-hole login failed, check the password or app password": "Anmeldung am Pi-hole fehlgeschlagen, Passwort oder App-Passwort prüfen",
+            "Donations / Gifts": "Spenden / Schenkung",
+            "This module is free for non-commercial use. Donations to support the author are accepted here:    ": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
         }
     }
 }

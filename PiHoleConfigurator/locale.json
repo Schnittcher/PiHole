@@ -10,7 +10,9 @@
             "Gravity, DNS restart and backup": "Gravity, DNS-Neustart und Backup",
             "Domains, groups, clients and lists": "Domains, Gruppen, Clients und Listen",
             "Network devices and DHCP leases": "Netzwerkgeräte und DHCP-Leases",
-            "Read and change the configuration": "Konfiguration lesen und ändern"
+            "Read and change the configuration": "Konfiguration lesen und ändern",
+            "Donations / Gifts": "Spenden / Schenkung",
+            "This module is free for non-commercial use. Donations to support the author are accepted here:    ": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
         }
     }
 }

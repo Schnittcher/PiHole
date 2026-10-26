@@ -29,7 +29,9 @@
             "Database size": "Größe der Datenbank",
             "Queries in database": "Abfragen in der Datenbank",
             "Host model": "Hostmodell",
-            "Update available": "Update verfügbar"
+            "Update available": "Update verfügbar",
+            "Donations / Gifts": "Spenden / Schenkung",
+            "This module is free for non-commercial use. Donations to support the author are accepted here:    ": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
         }
     }
 }

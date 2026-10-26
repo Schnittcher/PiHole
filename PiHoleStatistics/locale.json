@@ -25,7 +25,9 @@
             "blocked": "geblockt",
             "Last 24 hours": "Letzte 24 Stunden",
             "Top blocked": "Top geblockt",
-            "Top clients": "Top Clients"
+            "Top clients": "Top Clients",
+            "Donations / Gifts": "Spenden / Schenkung",
+            "This module is free for non-commercial use. Donations to support the author are accepted here:    ": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
         }
     }
 }

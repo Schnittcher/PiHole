@@ -1,7 +1,9 @@
 {
     "translations": {
         "de": {
-            "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions.": "Diese Instanz hat keine Einstellungen. Die Pi-hole Konfiguration wird mit den PIHCONF-Funktionen gelesen und geändert."
+            "This instance has no settings. The Pi-hole configuration is read and changed with the PIHCONF functions.": "Diese Instanz hat keine Einstellungen. Die Pi-hole Konfiguration wird mit den PIHCONF-Funktionen gelesen und geändert.",
+            "Donations / Gifts": "Spenden / Schenkung",
+            "This module is free for non-commercial use. Donations to support the author are accepted here:    ": "Dieses Modul ist für die nicht kommerzielle Nutzung kostenlos, Schenkungen als Unterstützung für den Autor werden hier akzeptiert:    "
         }
     }
 }
