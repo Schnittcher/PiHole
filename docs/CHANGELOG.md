@@ -15,3 +15,50 @@
 ### Fixes
 - Das Modul funktioniert wieder mit Pi-hole v6.
 - Achtung: Die frühere Instanz "PiHole" und der `API Token` entfallen. Instanzen müssen neu angelegt werden, die Zugangsdaten stehen im Splitter.
+
+## 09.02.2022 - Version 1.6
+
+### Fixes
+- Die Statusvariable funktionierte mit den neueren Pi-hole Versionen nicht mehr richtig.
+- Interne Funktionen umgestellt
+
+## 17.08.2018 - Version 1.5
+
+### Neu
+- Abfragen zwischengespeichert
+- Gesamte DNS Abfragen
+- Gravitiy zuletzt aktualisiert
+
+### Fixes
+- GUID
+
+## 16.08.2018 - Version 1.4
+
+### Neu
+- Übersetzungen hinzugefügt
+- Variable prozentualer Anteil heute gesperrter Seiten hinzugefügt
+
+## 15.08.2018 - Version 1.3
+
+### Fixes
+- Redundanten Code rausgeworfen
+- Überprüfung ob Request Rückgabewert ungleich NULL ist
+
+## 14.08.2018 - Version 1.2
+
+### Fixes
+- Update Timer
+- Error Handling (Meldung wird im Webfront ausgegeben), falls Pi-hole nicht erreichbar ist.
+
+## 14.08.2018 - Version 1.1
+
+### Fixes
+- Wenn keine IP angegeben ist wird der Timer nicht aktiviert.
+- Fehlermeldung im Debug, wenn keine Verbindung zur API hergestellt werden kann.
+- IP und Port Namen geändert.
+
+## 14.08.2018 - Version 1.0
+
+### Neu
+- Pi-hole in IP-Symcon überwachen und steuern: Pi-hole aktivieren und deaktivieren.
+- Anzeige der Statistik: Status, Blocked Domains, DNS Queries Today und Ads Blocked Today.
